@@ -86,6 +86,17 @@ There are a large number of machine learning models used in the prediction of th
 3) Install the python dependencies using ``` pip install -r requirements.txt ```
 4)  Now, run the applictaion using either of the commands ```python app.py``` or ```flask run```
 
+## Using both hourly and daily datasets in the webapp
+The web application now supports both the hourly (`hour.csv`) and daily (`day.csv`) datasets. On the main prediction page (`/index`) there is a "Dataset & Filters" panel where you can:
+
+- Choose `day` (daily aggregated) or `hour` (hourly) dataset
+- Filter by weekday (Sun...Sat)
+- Filter by hour (0-23) — only applied when `hour` dataset is selected
+
+After applying filters the page shows simple statistics (rows, total and mean `cnt`) and a preview of the filtered rows.
+
+If you need to retrain the ML model on one of the datasets, run `model.py` which will read `day.csv` by default (the model training script was updated to use daily data). The trained model is saved to `model.pkl`.
+
 ## Conclusion:
 
 * The models that were able to perform the best for predicting the bike demand are __Gradient Boosting Decision Regressor__ and __Deep Neural Networks__.

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Bike Rental AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .chat-container { max-width: 900px; margin: 0 auto; }
+        .chat-header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .chat-header h1 {
+            font-size: 36px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .chat-box {
+            background: var(--surface);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            padding: 24px;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: fadeInUp 0.7s ease-out;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        .messages li {
+            margin: 12px 0;
+            padding: 14px 18px;
+            border-radius: 16px;
+            max-width: 75%;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .messages .bot {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.15));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            margin-right: auto;
+        }
+        .messages .you {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: right;
+            margin-left: auto;
+        }
+        .input-area {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 14px 18px;
+            font-size: 15px;
+        }
+        .input-area button {
+            min-width: 120px;
+        }
+        .quick-suggestions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .suggestion-btn {
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .suggestion-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="topnav">
+        <div class="left">
+            <a href="/">Home</a>
+            <a href="{{ url_for('index') }}">Prediction</a>
+            <a href="{{ url_for('insights') }}">AI Insights</a>
+            <a class="active" href="{{ url_for('chatbot') }}">Chatbot</a>
+            <a href="{{ url_for('change_password') }}">Change Password</a>
+        </div>
+        <div class="right">
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container chat-container">
+        <div class="chat-header">
+            <h1>💬 AI Assistant</h1>
+            <p class="muted">Ask me anything about predictions, features, or datasets</p>
+        </div>
+        
+        <div class="chat-box">
+            <ul id="msgs" class="messages"></ul>
+            <div class="input-area">
+                <input id="msg" type="text" placeholder="Type your question here..." onkeypress="if(event.key==='Enter') send()" />
+                <button onclick="send()">Send</button>
+            </div>
+            <div class="quick-suggestions">
+                <span class="suggestion-btn" onclick="sendSuggestion('What are the top features?')">Top Features</span>
+                <span class="suggestion-btn" onclick="sendSuggestion('How to predict?')">How to Predict</span>
+                <span class="suggestion-btn" onclick="sendSuggestion('Tell me about datasets')">Datasets Info</span>
+                <span class="suggestion-btn" onclick="sendSuggestion('Hello')">Say Hello</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function add(role, text){
+            const li = document.createElement('li');
+            li.className = role;
+            li.innerText = text;
+            document.getElementById('msgs').appendChild(li);
+            document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+        }
+        
+        async function send(){
+            const el = document.getElementById('msg');
+            const text = el.value.trim();
+            if(!text) return;
+            add('you', text);
+            el.value = '';
+            try {
+                const res = await fetch("{{ url_for('chatbot_api') }}", {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({message: text})
+                });
+                const data = await res.json();
+                add('bot', data.reply || 'Sorry, I couldn\'t process that.');
+            } catch(e) {
+                add('bot', 'Error connecting to the server.');
+            }
+        }
+        
+        function sendSuggestion(text) {
+            document.getElementById('msg').value = text;
+            send();
+        }
+        
+        // Welcome message
+        window.onload = () => {
+            add('bot', 'Hi! I\'m your AI assistant. Ask me about predictions, model features, or datasets!');
+        };
+    </script>
+</body>
+</html>

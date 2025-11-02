@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-image: url({{ url_for('static', filename='img/996331.jpg') }});
+            background-size: cover;
+            font-family: Arial, sans-serif;
+    }
+
+        form{
+            text-align: center;
+        }
+        .fill {
+            margin-right: 21%;
+        }
+        input{
+            width: 15%
+        }
+
+        select{
+            width: 15%
+        }
+
+        button{
+            width: 21%;
+            font-size: large;
+            height: 40px;
+            backdrop-filter: blur(65px);
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+            border-radius: 3px;
+            border-color: aliceblue;
+            background-color: transparent;
+            cursor: pointer;
+
+        }
+
+        label{
+            color: black;
+            font-size: 18px;
+            display: inline-block;
+            text-align: right;
+            width: 400px
+        }
+
+        label:hover{
+            color: red;
+              background-color: transparent;
+              text-decoration: underline;
+        }
+
+
+    </style>
+    <title>Bike Rentals Service - Prediction</title>
+</head>
+
+<body>
+ <div class="login">
+    <!-- Simple navigation -->
+    <div class="topnav">
+        <div class="left">
+            <a href="/">Home</a>
+            <a class="active" href="{{ url_for('index', dataset=selected_dataset or 'day') }}">Prediction</a>
+            <a href="{{ url_for('insights') }}">AI Insights</a>
+            <a href="{{ url_for('chatbot') }}">Chatbot</a>
+            <a href="{{ url_for('change_password') }}">Change Password</a>
+        </div>
+        <div class="right">
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+    <div style="height: 56px"></div>
+    <center><h1 style="color:black"> Rental bikes prediction</h1></center>
+    <center><h2><font color="black"><i>The perfect two-wheelers for you.</i></font></h2></center>
+
+     <!-- Main Input For Receiving Query to our ML -->
+    <!-- Filter form (separate) -->
+    <form action="{{ url_for('filter_data') }}" method="post">
+        <!-- Dataset selector only (no other filters) -->
+        <fieldset style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+            <legend><b>Dataset</b></legend>
+            <label for="dataset"><b>Dataset</b></label>
+            <select id="dataset" name="dataset">
+                <option value="day" {% if selected_dataset=='day' %}selected{% endif %}>Day (daily)</option>
+                <option value="hour" {% if selected_dataset=='hour' %}selected{% endif %}>Hour (hourly)</option>
+            </select>
+            <br/><br/>
+            <button type="submit">Set dataset</button>
+        </fieldset>
+    </form>
+
+    <!-- Prediction form -->
+    <form action="{{ url_for('predict') }}" method="post">
+        <!-- Persist selected dataset into predict POST -->
+        <input type="hidden" name="dataset" value="{{ selected_dataset or 'day' }}" />
+        <div class="fill">
+        <b><label for="wea">Weather</label></b>
+        <select id="wea" name="weather">
+            <option value="1">Clear/ Few clouds/ Partly cloudy</option>
+            <option value="2">Mist and Cloudy/ Mist and Broken clouds/ Mist and Few clouds/ Mist</option>
+            <option value="3">Light Snow/ Light Rain, Thunderstorm and Scattered clouds/ Light Rain and Scattered clouds</option>
+            <option value="4">Heavy Rain, Ice Pallets, Thunderstorm and Mist/ Snow and Fog</option>
+        </select>
+        <br></br>
+
+        <b><label for="season">Season</label></b>
+        <select id="season" name="Seasons">
+            <option value="1">Spring</option>
+            <option value="2">Summer</option>
+            <option value="3">Fall</option>
+            <option value="4">Winter</option>
+        </select>
+        <br></br>
+
+        <b><label for="temperature">Temperature</label></b>
+        <input type="text" id="temperature" name="temp", required="required", placeholder="Temperature">
+        <br></br>
+
+        <b><label for="humidity">Humidity</label></b>
+        <input type="text" id="humidity" name="hum", required="required", placeholder="Humidity">
+        <br></br>
+
+        <b><label for="mon">Month</label></b>
+        <select id="mon" name="Month">
+            <option value="1">Jan</option>
+            <option value="2">Feb</option>
+            <option value="3">Mar</option>
+            <option value="4">Apr</option>
+            <option value="5">May</option>
+            <option value="6">Jun</option>
+            <option value="7">Jul</option>
+            <option value="8">Aug</option>
+            <option value="9">Sep</option>
+            <option value="10">Oct</option>
+            <option value="11">Nov</option>
+            <option value="12">Dec</option>
+        </select>
+        <br></br>        
+  
+
+        <b><label for="Windspeed">Windspeed</label></b>
+        <input type="text" id="Windspeed" name="windspeed", required="required", placeholder="Windspeed">
+        <br></br>
+
+        <b><label for="year">Past or Future</label></b>
+        <select id="year" name="yr">
+            <option value="1">2022</option>
+            <option value="1">2021</option>
+            <option value="1">2020</option>
+            <option value="1">2019</option>
+            <option value="0">2018</option>
+            <option value="1">Future</option>
+        </select>
+        <br></br>
+
+        <b><label for="holiday">Is it holiday?</label></b>
+        <select id="holiday" name="holiday">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </select>
+        <br></br>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
+    <h1><b><center><font color="white" size="8">{{ prediction_text }}</font></center></b></h1>
+        <!-- No filtered CSV preview; dataset-only selection is handled above -->
+        <button onclick="location.href = '/';" id="myButton" class="float-left submit-button" >🡨 Back to Home page</button>
+        <br/>
+        <br/>
+        <button onclick="location.href = '/shuffle';" id="myButton" class="float-left submit-button" >Shuffle bikes</button>
+    </form>
+     <br>
+   
+
+    </div>
+</body>
+</html>

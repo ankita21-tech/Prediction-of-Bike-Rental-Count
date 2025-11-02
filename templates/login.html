@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Bike Rental Prediction</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .login-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.10);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
+            padding: 40px 32px 32px 32px;
+            width: 350px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        .login-container h2 {
+            color: #fff;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0 20px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 16px;
+        }
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            outline: none;
+            background: rgba(255,255,255,0.3);
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: #4e54c8;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .login-container button:hover {
+            background: #232526;
+        }
+        .login-container .error {
+            color: #ffb3b3;
+            margin-bottom: 10px;
+        }
+        .login-container .tab {
+            margin-top: 18px;
+            color: #fff;
+            font-size: 15px;
+        }
+        .login-container .tab a {
+            color: #4e54c8;
+            text-decoration: underline;
+            margin-left: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="error">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form method="post">
+            <input type="text" name="username" placeholder="Username" required autofocus>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div class="tab">
+            <span>Want to change password?</span>
+            <a href="{{ url_for('change_password') }}">Change Password</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         body {
             background-image: url({{ url_for('static', filename='img/cycle1.jpg') }});
@@ -27,11 +28,24 @@
         }
 
     </style>
-    <title>Bike Rentals Service - API</title>
+    <title>Bike Rentals Service - Shuffle</title>
 </head>
 
 
-    <body> 
+    <body>
+        <div class="topnav">
+            <div class="left">
+                <a href="/">Home</a>
+                <a href="{{ url_for('index') }}">Prediction</a>
+                <a href="{{ url_for('insights') }}">AI Insights</a>
+                <a href="{{ url_for('chatbot') }}">Chatbot</a>
+                <a href="{{ url_for('change_password') }}">Change Password</a>
+            </div>
+            <div class="right">
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+        <div style="height: 56px"></div>
         <button onclick="myFunction()">Shuffle bikes to nearby locations</button>
         <p id="demo"></p>
         <script>
