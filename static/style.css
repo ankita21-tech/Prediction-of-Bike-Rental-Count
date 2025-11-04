@@ -67,6 +67,14 @@ body {
 
 .topnav .left, .topnav .right { display: flex; align-items: center; }
 
+.topnav .right span {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Container & layouts */
 .container {
   max-width: 1200px;

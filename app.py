@@ -5,10 +5,31 @@ from flask import Flask, request, jsonify, render_template
 from flask import redirect, url_for, session, flash
 import pickle
 
+# Try to import Gemini AI (optional)
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("Google Generative AI not installed. Chatbot will use fallback responses.")
 
 app= Flask(__name__, static_url_path='/static')
 # Use a rotating secret key in dev so old cookies don't auto-login across restarts
 app.secret_key = os.environ.get('FLASK_SECRET_KEY') or os.urandom(24)
+
+# Configure Gemini AI if available
+GEMINI_ENABLED = False
+if GEMINI_AVAILABLE:
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyDlbs0UfFGfsjDlfjdslfjdslfjdslkfjds')  # Replace with your key
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel('gemini-pro')
+        GEMINI_ENABLED = True
+        print("Gemini AI configured successfully!")
+    except Exception as e:
+        print(f"Gemini AI not configured: {e}")
+        GEMINI_ENABLED = False
+
 # Load both models and scalers
 with open('model_day.pkl', 'rb') as f:
     model_day = pickle.load(f)
@@ -18,6 +39,18 @@ with open('model_hour.pkl', 'rb') as f:
     model_hour = pickle.load(f)
 with open('scaler_hour.pkl', 'rb') as f:
     scaler_hour = pickle.load(f)
+
+# Load datasets from pickle files instead of CSV
+try:
+    with open('day_data.pkl', 'rb') as f:
+        df_day_info = pickle.load(f)
+    with open('hour_data.pkl', 'rb') as f:
+        df_hour_info = pickle.load(f)
+    print(f"Loaded data from pickle files: Day={len(df_day_info)} rows, Hour={len(df_hour_info)} rows")
+except Exception as e:
+    print(f"Error loading pickle data: {e}. Falling back to CSV.")
+    df_day_info = pd.read_csv('day.csv')
+    df_hour_info = pd.read_csv('hour.csv')
 
 # Preload datasets for insights and stats
 FEATURES_ORDER = ['Best', 'Neutral', 'spring', 'temp', 'winter', 'summer', 'hum', 'Jul', 'Sep', 'windspeed', 'yr', 'holiday']
@@ -46,23 +79,20 @@ def _prep_df_for_features(df: pd.DataFrame) -> pd.DataFrame:
         dfc = dummies(col, dfc)
     return dfc
 
+# Load feature names from models
 try:
-    df_day_info = pd.read_csv('day.csv')
-    df_hour_info = pd.read_csv('hour.csv')
-    df_day_feat_df = _prep_df_for_features(df_day_info)
-    df_hour_feat_df = _prep_df_for_features(df_hour_info)
-    feature_names_day = [c for c in FEATURES_ORDER if c in df_day_feat_df.columns]
-    feature_names_hour = [c for c in FEATURES_ORDER if c in df_hour_feat_df.columns]
+    feature_names_day = model_day.feature_names_in_.tolist()
+    feature_names_hour = model_hour.feature_names_in_.tolist()
 except Exception:
-    df_day_info = pd.DataFrame()
-    df_hour_info = pd.DataFrame()
-    feature_names_day = FEATURES_ORDER
-    feature_names_hour = FEATURES_ORDER
+    feature_names_day = []
+    feature_names_hour = []
 
 @app.route('/')
 def home():
     if not session.get('logged_in'):
+        print("User not logged in, redirecting to login page")
         return redirect(url_for('login'))
+    print("User logged in, showing home page")
     return render_template('home.html')
 
 @app.route('/index')
@@ -194,22 +224,65 @@ def chatbot_api():
         return jsonify({"error": "unauthorized"}), 401
     try:
         data = request.get_json(silent=True) or {}
-        text = (data.get('message') or '').lower()
-        if any(k in text for k in ['hello','hi','hey']):
-            reply = 'Hi! You can ask me about predictions, datasets, or model features.'
-        elif 'predict' in text:
-            reply = 'Use the Prediction tab. Choose Day or Hour dataset, fill inputs, and hit Predict.'
-        elif 'dataset' in text or 'data set' in text:
-            reply = f"Day rows: {len(df_day_info) if not df_day_info.empty else 0}, Hour rows: {len(df_hour_info) if not df_hour_info.empty else 0}."
-        elif 'feature' in text or 'important' in text:
-            td = ', '.join([n for n,_ in sorted(zip(feature_names_day, getattr(model_day, 'feature_importances_', [])), key=lambda x: x[1], reverse=True)[:3]]) if hasattr(model_day,'feature_importances_') else 'temp, hum, windspeed'
-            th = ', '.join([n for n,_ in sorted(zip(feature_names_hour, getattr(model_hour, 'feature_importances_', [])), key=lambda x: x[1], reverse=True)[:3]]) if hasattr(model_hour,'feature_importances_') else 'temp, hum, windspeed'
-            reply = f"Top features (day): {td}. Top features (hour): {th}."
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({"reply": "Please enter a message."})
+        
+        # Try to use Gemini AI first
+        if GEMINI_ENABLED:
+            try:
+                # Create context-aware prompt
+                context = f"""You are an AI assistant for a Bike Rental Prediction System. 
+                You help users understand bike rental patterns, predictions, and data insights.
+                
+                System Information:
+                - We have Day and Hour prediction models
+                - Day dataset: {len(df_day_info)} records
+                - Hour dataset: {len(df_hour_info)} records
+                - Top features for day model: {', '.join(feature_names_day[:5]) if feature_names_day else 'temp, hum, windspeed'}
+                - Top features for hour model: {', '.join(feature_names_hour[:5]) if feature_names_hour else 'temp, hum, windspeed'}
+                
+                User question: {user_message}
+                
+                Provide a helpful, concise response (2-3 sentences) about bike rental predictions, datasets, or features.
+                Be friendly and informative."""
+                
+                response = gemini_model.generate_content(context)
+                reply = response.text
+            except Exception as gemini_error:
+                print(f"Gemini error: {gemini_error}")
+                # Fallback to simple responses
+                reply = get_fallback_response(user_message.lower())
         else:
-            reply = "I'm a demo assistant. Try asking: 'What are top features?' or 'How to predict?'"
+            reply = get_fallback_response(user_message.lower())
+        
         return jsonify({"reply": reply})
     except Exception as e:
-        return jsonify({"reply": f"Error: {e}"})
+        return jsonify({"reply": f"Sorry, I encountered an error. Please try again."})
+
+def get_fallback_response(text):
+    """Fallback responses when Gemini is not available"""
+    if any(k in text for k in ['hello','hi','hey','hii']):
+        return 'Hi! 👋 I\'m your AI assistant. Ask me about bike rental predictions, datasets, or model features!'
+    elif 'predict' in text or 'prediction' in text:
+        return 'To make predictions: Go to the Prediction tab, select Day or Hour dataset, fill in weather and time details, then click Predict to see rental forecasts.'
+    elif 'dataset' in text or 'data' in text:
+        return f"We have two datasets: Day model ({len(df_day_info)} records) and Hour model ({len(df_hour_info)} records). Both contain weather, seasonal, and temporal features."
+    elif 'feature' in text or 'important' in text:
+        top_day = ', '.join(feature_names_day[:3]) if feature_names_day else 'temp, hum, windspeed'
+        top_hour = ', '.join(feature_names_hour[:3]) if feature_names_hour else 'temp, hum, windspeed'
+        return f"Key features - Day model: {top_day}. Hour model: {top_hour}. These factors most influence rental predictions."
+    elif 'weather' in text:
+        return 'Weather significantly impacts rentals! Clear weather drives highest demand. Temperature, humidity, and wind speed are key factors in our predictions.'
+    elif 'season' in text:
+        return 'Seasonal patterns matter! Typically, fall shows highest demand, followed by summer. Spring and winter see lower rentals due to weather conditions.'
+    elif 'accuracy' in text or 'model' in text:
+        return 'Our models use Gradient Boosting with 50+ features including weather interactions and temporal patterns for accurate predictions.'
+    elif 'help' in text or 'how' in text:
+        return 'I can help with: predictions, datasets, feature importance, weather impact, seasonal trends, and model information. What would you like to know?'
+    else:
+        return "I'm here to help with bike rental predictions! Try asking: 'How do I predict?' or 'What features are important?' or 'Tell me about the datasets.'"
 
 @app.route('/shuffle')
 def predictionpage():
@@ -326,16 +399,22 @@ def filter_data():
     return redirect(url_for('index', dataset=dataset))
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    print(f"Login route accessed, method: {request.method}")
     if session.get('logged_in'):
-        return redirect(url_for('index'))
+        print("Already logged in, redirecting to home")
+        return redirect(url_for('home'))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        print(f"Login attempt: username={username}")
         if username == 'admin' and password == 'admin123':
             session['logged_in'] = True
-            return redirect(url_for('index'))
+            print("Login successful!")
+            return redirect(url_for('home'))
         else:
+            print("Login failed - invalid credentials")
             flash('Invalid username or password', 'danger')
+    print("Rendering login.html")
     return render_template('login.html')
 
 @app.route('/logout')

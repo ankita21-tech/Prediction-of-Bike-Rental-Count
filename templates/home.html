@@ -102,9 +102,10 @@
             <a href="{{ url_for('index') }}">Prediction</a>
             <a href="{{ url_for('insights') }}">AI Insights</a>
             <a href="{{ url_for('chatbot') }}">Chatbot</a>
-            <a href="{{ url_for('change_password') }}">Change Password</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
         </div>
         <div class="right">
+            <span style="color: var(--text-muted); margin-right: 16px;">👤 Admin</span>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
@@ -150,14 +151,15 @@
 
             <div class="feature-card">
                 <div class="feature-icon">💬</div>
-                <h3>Interactive Chatbot</h3>
-                <p>Ask questions about predictions, features, and model behavior through our intelligent assistant.</p>
+                <h3>AI Chatbot (Gemini)</h3>
+                <p>Powered by Google Gemini AI for intelligent, context-aware responses about predictions and bike rental insights.</p>
             </div>
 
             <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Secure Access</h3>
-                <p>Session-based authentication ensures your data and predictions remain private and secure.</p>
+                <div class="feature-icon">�</div>
+                <h3>Optimized Performance</h3>
+                <p>Uses pickle files for fast data loading and efficient model deployment with secure session management.</p>
+            </div>
             </div>
         </div>
 

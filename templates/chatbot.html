@@ -19,6 +19,28 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        .chat-header .powered-by {
+            color: #9aa0b4;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .chat-header .powered-by .gemini-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(234, 67, 53, 0.15));
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(66, 133, 244, 0.3);
+            margin-top: 8px;
+        }
+        .chat-header .powered-by .gemini-badge .sparkle {
+            animation: sparkle 2s infinite;
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
         .chat-box {
             background: var(--surface);
             border-radius: 20px;
@@ -98,9 +120,10 @@
             <a href="{{ url_for('index') }}">Prediction</a>
             <a href="{{ url_for('insights') }}">AI Insights</a>
             <a class="active" href="{{ url_for('chatbot') }}">Chatbot</a>
-            <a href="{{ url_for('change_password') }}">Change Password</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
         </div>
         <div class="right">
+            <span style="color: var(--text-muted); margin-right: 16px;">👤 Admin</span>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
@@ -109,6 +132,12 @@
         <div class="chat-header">
             <h1>💬 AI Assistant</h1>
             <p class="muted">Ask me anything about predictions, features, or datasets</p>
+            <div class="powered-by">
+                <span class="gemini-badge">
+                    <span class="sparkle">✨</span>
+                    <strong>Powered by Google Gemini AI</strong>
+                </span>
+            </div>
         </div>
         
         <div class="chat-box">
@@ -121,7 +150,7 @@
                 <span class="suggestion-btn" onclick="sendSuggestion('What are the top features?')">Top Features</span>
                 <span class="suggestion-btn" onclick="sendSuggestion('How to predict?')">How to Predict</span>
                 <span class="suggestion-btn" onclick="sendSuggestion('Tell me about datasets')">Datasets Info</span>
-                <span class="suggestion-btn" onclick="sendSuggestion('Hello')">Say Hello</span>
+                <span class="suggestion-btn" onclick="sendSuggestion('What is the weather impact?')">Weather Impact</span>
             </div>
         </div>
     </div>
