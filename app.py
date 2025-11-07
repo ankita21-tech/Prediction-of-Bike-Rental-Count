@@ -284,12 +284,6 @@ def get_fallback_response(text):
     else:
         return "I'm here to help with bike rental predictions! Try asking: 'How do I predict?' or 'What features are important?' or 'Tell me about the datasets.'"
 
-@app.route('/shuffle')
-def predictionpage():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    return render_template('shuffle.html')
-
 @app.route('/predict', methods=['POST'])
 def predict():
     if not session.get('logged_in'):
