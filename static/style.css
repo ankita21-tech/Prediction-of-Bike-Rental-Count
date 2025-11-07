@@ -147,21 +147,46 @@ label {
 
 input, select, textarea {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
+  background: #0f1222; /* force dark background for all inputs */
   color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 15px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: #0c0f1d;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.18);
+}
+
+/* Improve dark dropdown styling */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text) 50%),
+                    linear-gradient(135deg, var(--text) 50%, transparent 50%),
+                    linear-gradient(to right, transparent, transparent);
+  background-position: calc(100% - 20px) calc(1em + 2px),
+                       calc(100% - 15px) calc(1em + 2px),
+                       100% 0;
+  background-size: 5px 5px, 5px 5px, 2.5em 2.5em;
+  background-repeat: no-repeat;
+}
+
+select option {
+  background: #0f1222;
+  color: var(--text);
 }
 
 /* Modern buttons */
